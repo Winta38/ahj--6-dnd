@@ -9,10 +9,10 @@ export default class DragDrop {
 
   init() {
     this.container = document.querySelector('.container');
-    this.container.addEventListener('mousedown', this.down);
-    this.container.addEventListener('mousemove', this.move);
-    this.container.addEventListener('mouseleave', this.leave);
-    this.container.addEventListener('mouseup', this.up);
+    this.container.addEventListener('mousedown', (e) => this.down(e));
+    this.container.addEventListener('mousemove', (e) => this.move(e));
+    this.container.addEventListener('mouseleave', (e) => this.leave(e));
+    this.container.addEventListener('mouseup', (e) => this.up(e));
   }
 
   down(e) {
@@ -22,12 +22,12 @@ export default class DragDrop {
     e.preventDefault();
     this.draggedEl = e.target.closest('.item');
     this.ghostEl = this.draggedEl.cloneNode(true);
-    this.ghostEl.style.width = `${this.draggedEl.offsetWidth}px`;
+    this.ghostEl.style.cssText = `width: ${this.draggedEl.offsetWidth}px`;
     this.ghostEl.classList.add('dragged');
-    document.querySelector('.container').appendChild(this.ghostEl);
-    this.ghostEl.style.left = `${e.pageX - this.ghostEl.offsetWidth / 2}px`;
-    this.ghostEl.style.top = `${e.pageY - this.ghostEl.offsetHeight / 2}px`;
-    this.draggedEl.style.opacity = 0;
+    this.container.appendChild(this.ghostEl);
+    this.ghostEl.style.cssText = `left: ${e.pageX - this.ghostEl.offsetWidth / 2}px`;
+    this.ghostEl.style.cssText = `top: ${e.pageY - this.ghostEl.offsetHeight / 2}px`;
+    this.draggedEl.style.opacity = '0';
     this.empty = document.createElement('li');
     this.empty.classList.add('empty');
     this.empty.style.height = `${this.draggedEl.offsetHeight}px`;
@@ -41,8 +41,11 @@ export default class DragDrop {
     this.ghostEl.classList.add('hidden');
     this.elem = document.elementFromPoint(e.clientX, e.clientY);
     this.ghostEl.classList.remove('hidden');
-    this.ghostEl.style.left = `${e.pageX - this.ghostEl.offsetWidth / 2}px`;
-    this.ghostEl.style.top = `${e.pageY - this.ghostEl.offsetHeight / 2}px`;
+    this.ghostEl.style.cssText = `left: ${e.pageX - this.ghostEl.offsetWidth / 2}px`;
+    this.ghostEl.style.cssText = `top: ${e.pageY - this.ghostEl.offsetHeight / 2}px`;
+    if (!this.elem) {
+      return;
+    }
     if (this.elem.closest('.block')) {
       const parentEl = this.elem.closest('.block').querySelector('ul');
       if (!parentEl.hasChildNodes()) {
@@ -62,48 +65,44 @@ export default class DragDrop {
     if (!this.draggedEl) {
       return;
     }
-    if (this.elem === undefined) {
-      this.ghostEl.classList.remove('dragged');
-      this.draggedEl.style.opacity = 100;
-      this.ghostEl.remove();
-      this.ghostEl = null;
-      this.draggedEl = null;
-      return;
+    if (!this.elem) {
+      return this.cancel(e);
     }
     if (!this.elem.closest('.block')) {
-      document.querySelector('.container').removeChild(this.ghostEl);
-      this.draggedEl.style.opacity = 100;
-      this.ghostEl = null;
-      this.draggedEl = null;
-      return;
+      return this.cancel(e);
     }
     const parentUl = this.elem.closest('.block').querySelector('ul');
     if (this.elem.closest('h3')) {
-      parentUl.prepend(this.ghostEl);
-    } else if (this.elem.closest('add_item')) {
-      parentUl.append(this.ghostEl);
+      parentUl.prepend(this.draggedEl);
+    } else if (this.elem.closest('.add_item')) {
+      parentUl.append(this.draggedEl);
     } else {
-      parentUl.insertBefore(this.ghostEl, this.elem.closest('li'));
+      parentUl.insertBefore(this.draggedEl, this.elem.closest('.item'));
     }
-    if (document.querySelector('.empty')) {
-      document.querySelector('.empty').remove();
+    if (this.container.querySelector('.empty')) {
+      this.container.querySelector('.empty').remove();
     }
-    this.ghostEl.classList.remove('dragged');
-    this.ghostEl.style = '100%';
-    this.draggedEl.remove();
-    this.ghostEl = null;
+    this.draggedEl.style.opacity = '1';
     this.draggedEl = null;
+    this.ghostEl = null;
+  }
+
+  cancel(e) {
+    e.preventDefault();
+    if (this.ghostEl) {
+      this.ghostEl.remove();
+    }
+    if (this.container.querySelector('.empty')) {
+      this.container.querySelector('.empty').remove();
+    }
+    if (this.draggedEl) {
+      this.draggedEl.style.opacity = '1';
+    }
+    this.draggedEl = null;
+    this.ghostEl = null;
   }
 
   leave(e) {
-    e.preventDefault();
-    if (!this.draggedEl) {
-      return;
-    }
-    document.querySelector('.container').removeChild(this.ghostEl);
-    document.querySelector('.empty').remove();
-    this.draggedEl.style.opacity = 100;
-    this.ghostEl = null;
-    this.draggedEl = null;
+    return this.cancel(e);
   }
 }

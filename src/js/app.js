@@ -2,7 +2,6 @@ import Card from './card';
 import DragDrop from './dragDrop';
 
 const card = new Card();
-const container = document.querySelector('.container');
 card.init();
 const DnD = new DragDrop();
 DnD.init();
@@ -20,16 +19,17 @@ document.addEventListener('DOMContentLoaded', () => {
     return false;
   }
   if (Data) {
+    const container = document.querySelector('.container');
     Object.keys(Data).forEach((key) => {
       const value = Data[key];
       value.forEach((content) => {
         const li = document.createElement('li');
         li.classList.add('item');
-        li.insertAdjacentHTML('beforeend', `<span>${content}</span><button class="close-item">X</button>`);
+        li.textContent = content;
+        li.insertAdjacentHTML('beforeend', '<button class="close-item">X</button>');
         container.querySelector(`[data="${key}"]`).insertAdjacentElement('beforeend', li);
       });
     });
   }
-
   return true;
 });
